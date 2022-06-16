@@ -132,24 +132,13 @@ public class UserData
      * @return A boolean value indicating whether the given password is valid for
      * this user.
      */
-    public boolean checkPassword(String password)
-    {
-        try
-        {
-            // Compare passwords
-            for (int i = 0; i < password.length(); ++i)
-            {
-                // Matching character?
-                if (password.charAt(i) != _password.charAt(i))
-                    return false;
+    public boolean checkPassword(String password) {
+        try {
+            // Make brute force attacks inefficient
+            Thread.sleep(5000);
+            return password.equals(_password);
 
-                // Make brute force attacks inefficient
-                Thread.sleep(500);
-            }
-            return true;
-        }
-        catch (Exception ex)
-        {
+        } catch (InterruptedException e) {
             return false;
         }
     }
@@ -217,5 +206,16 @@ public class UserData
             if (code.equalsIgnoreCase(deviceCode))
                 return true;
         return false;
+    }
+
+
+    @Override
+    public String toString()
+    {
+        return "UserData{" +
+                "name='" + _name + '\'' +
+                ", password='" + _password + '\'' +
+                ", money=" + _money +
+                '}';
     }
 }

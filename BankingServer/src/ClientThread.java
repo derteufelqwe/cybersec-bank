@@ -46,8 +46,7 @@ public class ClientThread implements Runnable
      * @param clientSocket The socket of the new client.
      * @param database     The database containing user data.
      */
-    public ClientThread(Socket clientSocket, Database database)
-    {
+    public ClientThread(Socket clientSocket, Database database) {
         // Save parameters
         _clientSocket = clientSocket;
         _database = database;
@@ -57,8 +56,7 @@ public class ClientThread implements Runnable
      * The thread entry point.
      */
     @Override
-    public void run()
-    {
+    public void run() {
         Utility.safeDebugPrintln("Client thread started on port " + _clientSocket.getLocalPort() + ".");
         try
         {
@@ -147,13 +145,14 @@ public class ClientThread implements Runnable
         }
     }
 
+    // ----  Request handlers  -----
+
     /**
      * Executes the login protocol and returns the ID of the user.
      *
      * @return The ID of the user that logged in.
      */
-    public int runLogin() throws IOException
-    {
+    public int runLogin() throws IOException {
         // Wait for login packet
         String loginRequest = Utility.receivePacket(_clientSocketInputStream);
 
@@ -167,6 +166,12 @@ public class ClientThread implements Runnable
         String name = loginRequestParts[0].trim();
         String password = loginRequestParts[1].trim();
 
+        // Empty username / passwords are not allowed
+        if (name.equals("") || password.equals("")) {
+            Utility.sendPacket(_clientSocketOutputStream, "Invalid login packet.");
+            return -1;
+        }
+
         // Check login
         int userId = _database.verifyLogin(name, password);
         if (userId == -1)
@@ -179,8 +184,7 @@ public class ClientThread implements Runnable
     /**
      * Sends the balance to the current user.
      */
-    public void sendBalance() throws IOException
-    {
+    public void sendBalance() throws IOException {
         // First send current money
         Utility.sendPacket(_clientSocketOutputStream, Integer.toString(_database.getMoney(_userId)));
 
@@ -194,8 +198,7 @@ public class ClientThread implements Runnable
     /**
      * Executes the authentication protocol.
      */
-    public void runAuthentication() throws IOException
-    {
+    public void runAuthentication() throws IOException {
         // Wait for authentication packet
         String deviceCode = Utility.receivePacket(_clientSocketInputStream);
 
@@ -213,8 +216,7 @@ public class ClientThread implements Runnable
     /**
      * Handles the registration of a client device for the current user.
      */
-    public void doRegistration() throws IOException
-    {
+    public void doRegistration() throws IOException {
         // Wait for registration ID part 1 packet
         String registrationIdPart1 = Utility.receivePacket(_clientSocketInputStream).trim();
         if (registrationIdPart1.length() != 4)
@@ -245,8 +247,7 @@ public class ClientThread implements Runnable
     /**
      * Handles a transaction issued by the current user.
      */
-    public void handleTransaction() throws IOException
-    {
+    public void handleTransaction() throws IOException {
         // Wait for transaction packet
         String transactionRequest = Utility.receivePacket(_clientSocketInputStream);
 

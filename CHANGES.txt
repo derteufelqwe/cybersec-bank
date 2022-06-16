@@ -1,0 +1,3 @@
+- username no longer case-insensitive
+- replaced password check function
+- getRandomString is now true random

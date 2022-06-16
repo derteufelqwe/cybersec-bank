@@ -205,14 +205,13 @@ public class Database
      * @param password The password of the user.
      * @return The ID of the user if the login is right, else -1.
      */
-    public int verifyLogin(String name, String password)
-    {
+    public int verifyLogin(String name, String password) {
         // Run through users and search for given credentials
         for (int u = 0; u < _users.size(); ++u)
         {
             // Correct name?
             UserData currU = _users.get(u);
-            if (currU.getName().equalsIgnoreCase(name))
+            if (currU.getName().equals(name))
             {
                 // Check password
                 if (currU.checkPassword(password))

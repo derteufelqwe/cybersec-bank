@@ -158,16 +158,22 @@ public class Utility
     }
 
     /**
-     * Returns a random alpha numeric string with the given length.
+     * Returns a random alphanumeric string with the given length.
      *
      * @param length The length of the requested string.
-     * @return A random alpha numeric string with the given length.
+     * @return A random alphanumeric string with the given length.
      */
-    public static String getRandomString(int length)
-    {
-        // Generate random string efficiently
-        int randomIndex = new Random().nextInt(100 - length);
-        return "Sl4idafEVk9X1efZFSAUANyQefaua8JnnAVVQbhuEwrcA4c85yrMaaVjv1TiDbmPdQAD5pfyqcsj1obyEJxGulmaV8ezWYEXpyUs".substring(randomIndex, randomIndex + length);
+    public static String getRandomString(int length) {
+        String chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < length; i++) {
+            int r = random.nextInt(chars.length());
+            sb.append(chars.charAt(r));
+        }
+
+        return sb.toString();
     }
 
     /**
