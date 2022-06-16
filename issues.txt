@@ -1,0 +1,6 @@
+- Timing attack for password login
+- Password length attack (1 char is enough)
+- Confirmation code generation predictable
+- Device-code doesn't change for subsequent requests
+- getRandomString ist nur so mittel random
+- Remove trim from password the client sent

@@ -1,0 +1,39 @@
+{
+  "users": [
+    {
+      "name": "group",
+      "password": "0000",
+      "money": 1000,
+      "devices": [],
+      "scenario": -1
+    },
+    {
+      "name": "victim1",
+      "password": "6198800141",
+      "money": 1000,
+      "devices": [],
+      "scenario": 1
+    },
+    {
+      "name": "victim2",
+      "password": "455265",
+      "money": 1000,
+      "devices": [],
+      "scenario": 2
+    },
+    {
+      "name": "victim3",
+      "password": "240078",
+      "money": 1000,
+      "devices": [],
+      "scenario": 3
+    },
+    {
+      "name": "dummy",
+      "password": "0000",
+      "money": 1000,
+      "devices": [],
+      "scenario": -1
+    }
+  ]
+}
