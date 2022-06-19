@@ -3,6 +3,7 @@ import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
+import java.security.KeyPair;
 import java.util.Map;
 
 /**
@@ -39,6 +40,8 @@ public class ClientThread implements Runnable
      * Determines whether the client device has been authenticated.
      */
     private boolean _deviceAuthenticated = false;
+
+    private final KeyPair keyPair = DiffieHellman.generateKeyPair();
 
     /**
      * Creates a new thread that processes the given client socket.
@@ -219,17 +222,18 @@ public class ClientThread implements Runnable
     public void doRegistration() throws IOException {
         // Wait for registration ID part 1 packet
         String registrationIdPart1 = Utility.receivePacket(_clientSocketInputStream).trim();
-        if (registrationIdPart1.length() != 4)
+        if (registrationIdPart1.length() != 50)
             return;
 
         // Generate and send registration ID part 2 packet
-        String registrationIdPart2 = Utility.getRandomString(4);
+        String registrationIdPart2 = DiffieHellman.pubKeyToString(keyPair.getPublic());
         Utility.sendPacket(_clientSocketOutputStream, registrationIdPart2);
-        String registrationId = registrationIdPart1 + registrationIdPart2;
+
+        String registrationId = DiffieHellman.doECDH(DiffieHellman.pubKeyFromString(registrationIdPart1), keyPair.getPrivate());
         _database.addUserDevice(_userId, registrationId);
 
         // Send confirmation code via e-mail or display it in server terminal
-        String confirmationCode = registrationId.substring(2, 6);
+        String confirmationCode = registrationId.substring(0, 4);
         LabEnvironment.sendConfirmationCode(_database.getUserName(_userId), confirmationCode);
 
         // Wait for client confirmation code

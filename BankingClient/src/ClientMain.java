@@ -1,7 +1,10 @@
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.security.Security;
 import java.util.Scanner;
 
 public class ClientMain
@@ -17,6 +20,8 @@ public class ClientMain
             System.out.println("Please provide the client configuration file, the server's host name or IP address, its port and a directory for storing device codes.");
             return;
         }
+
+        Security.addProvider(new BouncyCastleProvider());
 
         // Create scanner for terminal input
         Scanner terminalScanner = new Scanner(System.in);

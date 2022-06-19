@@ -1,8 +1,11 @@
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 import javax.net.ssl.*;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.Security;
 import java.security.cert.X509Certificate;
 
 public class ServerMain
@@ -12,6 +15,8 @@ public class ServerMain
      */
     public static void main(String[] args)
     {
+        Security.addProvider(new BouncyCastleProvider());
+
         // HACK to disable SSL validation (else Java refuses to connect with the main
         // server API)
         // From:

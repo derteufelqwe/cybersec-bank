@@ -1,6 +1,8 @@
-import java.io.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.security.KeyPair;
 import java.util.Scanner;
 
 /**
@@ -24,6 +26,8 @@ public class RegistrationTask extends Task
      * Tells whether the transaction was successful.
      */
     private boolean _successful = false;
+
+    private final KeyPair keyPair = DiffieHellman.generateKeyPair();
 
     /**
      * Creates a registration task.
@@ -51,93 +55,38 @@ public class RegistrationTask extends Task
      */
     public void run() throws IOException
     {
-        // Check whether an device code has been generated in the past
-        Path deviceCodeFilename = Paths.get(_deviceCodeFilePathPrefix, "banking_device_" + _userName + ".txt");
-        if (new File(deviceCodeFilename.toString()).exists())
+
+        // Inform server about registration
+        String prePacket = "registration";
+        System.err.println("Sending registration header packet...");
+        Utility.sendPacket(_socketOutputStream, prePacket);
+
+        // Generate half of registration code
+        System.err.println("Generating and sending registration code part 1/2...");
+        String registrationCodePart1 = DiffieHellman.pubKeyToString(keyPair.getPublic());
+        Utility.sendPacket(_socketOutputStream, registrationCodePart1);
+
+        // Receive other half of registration code from server
+        System.err.println("Waiting for registration code part 2/2...");
+        String registrationCodePart2 = Utility.receivePacket(_socketInputStream);
+        if (registrationCodePart2.length() != 50)
         {
-            // Read device authentication code from file
-            System.err.println("Authentication file detected, reading device code...");
-            String authenticationCode;
-            try (Scanner deviceCodeFileScanner = new Scanner(new FileReader(deviceCodeFilename.toString())))
-            {
-                authenticationCode = deviceCodeFileScanner.next();
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-                return;
-            }
-
-            // Inform server about authentication
-            String prePacket = "authentication";
-            System.err.println("Sending authentication header packet...");
-            Utility.sendPacket(_socketOutputStream, prePacket);
-
-            // Send authentication code
-            System.err.println("Sending authentication code...");
-            Utility.sendPacket(_socketOutputStream, authenticationCode);
-
-            // Wait for confirmation by server
-            System.err.println("Waiting for server confirmation...");
-            String serverConfirmation = Utility.receivePacket(_socketInputStream);
-            System.err.println("Server response: " + serverConfirmation);
-            if (!serverConfirmation.equals("Authentication successful."))
-            {
-                // Show error
-                System.out.println("Authentication failed. Maybe the device code file is too old or invalid?");
-                return;
-            }
+            // Output response and stop registration process
+            System.err.println("Received invalid registration code part from server: " + registrationCodePart2);
+            return;
         }
-        else
-        {
-            // Inform server about registration
-            String prePacket = "registration";
-            System.err.println("Sending registration header packet...");
-            Utility.sendPacket(_socketOutputStream, prePacket);
+        String registrationCode = DiffieHellman.doECDH(DiffieHellman.pubKeyFromString(registrationCodePart2), keyPair.getPrivate());
+        System.err.println("Received full registration code.");
+        String confirmationCode = registrationCode.substring(0, 4);
+        Utility.sendPacket(_socketOutputStream, confirmationCode);
 
-            // Generate half of registration code
-            System.err.println("Generating and sending registration code part 1/2...");
-            String registrationCodePart1 = Utility.getRandomString(4);
-            Utility.sendPacket(_socketOutputStream, registrationCodePart1);
+        // Wait for confirmation by server
+        System.err.println("Waiting for server confirmation...");
+        String serverConfirmation = Utility.receivePacket(_socketInputStream);
+        System.err.println("Server response: " + serverConfirmation);
+        if (!serverConfirmation.equals("Registration successful."))
+            return;
 
-            // Receive other half of registration code from server
-            System.err.println("Waiting for registration code part 2/2...");
-            String registrationCodePart2 = Utility.receivePacket(_socketInputStream);
-            if (registrationCodePart2.length() != 4)
-            {
-                // Output response and stop registration process
-                System.err.println("Received invalid registration code part from server: " + registrationCodePart2);
-                return;
-            }
-            String registrationCode = registrationCodePart1 + registrationCodePart2;
-            System.err.println("Received full registration code.");
-
-            // Read confirmation code that the server should have sent via email
-            System.out.print("Confirmation code: ");
-            String confirmationCode = _terminalScanner.next();
-
-            // Send confirmation code
-            System.err.println("Sending confirmation code...");
-            Utility.sendPacket(_socketOutputStream, confirmationCode);
-
-            // Wait for confirmation by server
-            System.err.println("Waiting for server confirmation...");
-            String serverConfirmation = Utility.receivePacket(_socketInputStream);
-            System.err.println("Server response: " + serverConfirmation);
-            if (!serverConfirmation.equals("Registration successful."))
-                return;
-
-            // Save registration code
-            try (FileWriter deviceCodeFileWriter = new FileWriter(deviceCodeFilename.toString()))
-            {
-                deviceCodeFileWriter.write(registrationCode);
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-                return;
-            }
-        }
         _successful = true;
     }
 

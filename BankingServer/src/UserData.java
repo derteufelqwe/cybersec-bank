@@ -135,7 +135,7 @@ public class UserData
     public boolean checkPassword(String password) {
         try {
             // Make brute force attacks inefficient
-            Thread.sleep(5000);
+            Thread.sleep(500);  // ToDo: Change to 5000
             return password.equals(_password);
 
         } catch (InterruptedException e) {

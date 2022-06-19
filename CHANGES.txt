@@ -1,3 +1,4 @@
 - username no longer case-insensitive
 - replaced password check function
 - getRandomString is now true random
+- Changed how the device-code generation works

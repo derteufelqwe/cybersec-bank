@@ -3,6 +3,9 @@
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/BankingServer/lib/javax.json-1.1.4.jar!/" />
       <root url="jar://$PROJECT_DIR$/BankingServer/lib/javax.json-api-1.1.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/BankingServer/lib/bcpkix-jdk15on-1.70.jar!/" />
+      <root url="jar://$PROJECT_DIR$/BankingServer/lib/bcprov-jdk15on-1.70.jar!/" />
+      <root url="jar://$PROJECT_DIR$/BankingServer/lib/bctls-jdk15on-1.70.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

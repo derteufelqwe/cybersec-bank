@@ -227,8 +227,7 @@ public class Database
      * @param userId     The ID of the user where the new device shall be added.
      * @param deviceCode The device code to be added.
      */
-    public void addUserDevice(int userId, String deviceCode)
-    {
+    public void addUserDevice(int userId, String deviceCode) {
         // Add device
         if (userId >= 0 && userId < _users.size())
             _users.get(userId).addDevice(deviceCode);
