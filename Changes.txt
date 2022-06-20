@@ -1,0 +1,6 @@
+- username no longer case-insensitive
+- replaced password check function
+- getRandomString is now true random
+- registration uses random codes now
+- logintask sends a public key now as first message
+- login username, password now rsa encrypted

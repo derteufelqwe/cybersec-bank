@@ -95,22 +95,20 @@ public class RegistrationTask extends Task
             System.err.println("Sending registration header packet...");
             Utility.sendPacket(_socketOutputStream, prePacket);
 
-            // Generate half of registration code
-            System.err.println("Generating and sending registration code part 1/2...");
-            String registrationCodePart1 = Utility.getRandomString(4);
-            Utility.sendPacket(_socketOutputStream, registrationCodePart1);
+//            // Generate half of registration code
+//            System.err.println("Generating and sending registration code part 1/2...");
+//            String registrationCodePart1 = Utility.getRandomString(4);
+//            Utility.sendPacket(_socketOutputStream, registrationCodePart1);
 
             // Receive other half of registration code from server
-            System.err.println("Waiting for registration code part 2/2...");
-            String registrationCodePart2 = Utility.receivePacket(_socketInputStream);
-            if (registrationCodePart2.length() != 4)
-            {
-                // Output response and stop registration process
-                System.err.println("Received invalid registration code part from server: " + registrationCodePart2);
-                return;
-            }
-            String registrationCode = registrationCodePart1 + registrationCodePart2;
-            System.err.println("Received full registration code.");
+//            System.err.println("Waiting for registration code part 2/2...");
+//            String registrationCodePart2 = Utility.receivePacket(_socketInputStream);
+//            if (registrationCodePart2.length() != 4)
+//            {
+//                // Output response and stop registration process
+//                System.err.println("Received invalid registration code part from server: " + registrationCodePart2);
+//                return;
+//            }
 
             // Read confirmation code that the server should have sent via email
             System.out.print("Confirmation code: ");
@@ -126,6 +124,9 @@ public class RegistrationTask extends Task
             System.err.println("Server response: " + serverConfirmation);
             if (!serverConfirmation.equals("Registration successful."))
                 return;
+
+            String registrationCode = Utility.receivePacket(_socketInputStream);
+            System.err.println("Received full registration code.");
 
             // Save registration code
             try (FileWriter deviceCodeFileWriter = new FileWriter(deviceCodeFilename.toString()))

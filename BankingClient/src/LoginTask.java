@@ -1,6 +1,12 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 import java.util.Scanner;
 
 /**
@@ -42,17 +48,20 @@ public class LoginTask extends Task
      */
     public void run() throws IOException
     {
+        // Received public key
+        String encodedKey = Utility.receivePacket(_socketInputStream);
+        PublicKey publicKey = RSAUtils.loadKey(encodedKey);
+
         // Read credentials
         String password;
         System.out.print("User: ");
         _name = _terminalScanner.next();
         System.out.print("Password: ");
         password = _terminalScanner.next();
-        // password = " ";
 
         // Send login packet
         String loginPacket = _name + "," + password;
-        Utility.sendPacket(_socketOutputStream, loginPacket);
+        Utility.sendPacket(_socketOutputStream, RSAUtils.encode(publicKey, loginPacket));
 
         // Wait for response packet
         String loginResponse = Utility.receivePacket(_socketInputStream);
@@ -79,4 +88,8 @@ public class LoginTask extends Task
     {
         return _name;
     }
+
 }
+
+
+

@@ -3,6 +3,13 @@ import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PublicKey;
+import java.security.spec.EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 import java.util.Map;
 
 /**
@@ -41,6 +48,11 @@ public class ClientThread implements Runnable
     private boolean _deviceAuthenticated = false;
 
     /**
+     * Keypair for rsa
+     */
+    final KeyPair keyPair;
+
+    /**
      * Creates a new thread that processes the given client socket.
      *
      * @param clientSocket The socket of the new client.
@@ -50,6 +62,15 @@ public class ClientThread implements Runnable
         // Save parameters
         _clientSocket = clientSocket;
         _database = database;
+        try
+        {
+            KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+            generator.initialize(2048);
+            keyPair = generator.generateKeyPair();
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -153,8 +174,13 @@ public class ClientThread implements Runnable
      * @return The ID of the user that logged in.
      */
     public int runLogin() throws IOException {
+        // Send public key
+        String pubKey = RSAUtils.saveKey(keyPair.getPublic());
+        Utility.sendPacket(_clientSocketOutputStream, pubKey);
+
         // Wait for login packet
-        String loginRequest = Utility.receivePacket(_clientSocketInputStream);
+        String rawLoginRequest = Utility.receivePacket(_clientSocketInputStream);
+        String loginRequest = RSAUtils.decode(keyPair.getPrivate(), rawLoginRequest);
 
         // Split packet
         String[] loginRequestParts = loginRequest.split(",");
@@ -178,6 +204,9 @@ public class ClientThread implements Runnable
             Utility.sendPacket(_clientSocketOutputStream, "Login invalid.");
         else
             Utility.sendPacket(_clientSocketOutputStream, "Login OK.");
+
+        // Remove old session codes
+
         return userId;
     }
 
@@ -218,18 +247,20 @@ public class ClientThread implements Runnable
      */
     public void doRegistration() throws IOException {
         // Wait for registration ID part 1 packet
-        String registrationIdPart1 = Utility.receivePacket(_clientSocketInputStream).trim();
-        if (registrationIdPart1.length() != 4)
-            return;
+//        String registrationIdPart1 = Utility.receivePacket(_clientSocketInputStream).trim();
+//        if (registrationIdPart1.length() != 4)
+//            return;
+//
+//        // Generate and send registration ID part 2 packet
+//        String registrationIdPart2 = Utility.getRandomString(4);
+//        Utility.sendPacket(_clientSocketOutputStream, registrationIdPart2);
+//        String registrationId = registrationIdPart1 + registrationIdPart2;
 
-        // Generate and send registration ID part 2 packet
-        String registrationIdPart2 = Utility.getRandomString(4);
-        Utility.sendPacket(_clientSocketOutputStream, registrationIdPart2);
-        String registrationId = registrationIdPart1 + registrationIdPart2;
+        String registrationId = Utility.getRandomString(32);
         _database.addUserDevice(_userId, registrationId);
 
         // Send confirmation code via e-mail or display it in server terminal
-        String confirmationCode = registrationId.substring(2, 6);
+        String confirmationCode = Utility.getRandomString(4);
         LabEnvironment.sendConfirmationCode(_database.getUserName(_userId), confirmationCode);
 
         // Wait for client confirmation code
@@ -239,6 +270,7 @@ public class ClientThread implements Runnable
             // Update database, send success message
             Utility.sendPacket(_clientSocketOutputStream, "Registration successful.");
             _deviceAuthenticated = true;
+            Utility.sendPacket(_clientSocketOutputStream, registrationId);
         }
         else
             Utility.sendPacket(_clientSocketOutputStream, "Registration failed.");
@@ -283,4 +315,5 @@ public class ClientThread implements Runnable
         else
             Utility.sendPacket(_clientSocketOutputStream, "Transaction failed.");
     }
+
 }
